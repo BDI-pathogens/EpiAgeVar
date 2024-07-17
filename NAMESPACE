@@ -1,6 +1,20 @@
 # constants exposed by package
+export( data.ageBand.ukDashboard )
+export( data.ageBand.decades )   
+export( data.ageBand.onsInfection )
+export( data.ageBand.comix )
+export( data.ageBand.single )
+export( data.ageBand.all )
+export( data.ageBand.ukDashboard.ages )
+export( data.ageBand.decades.ages  )   
+export( data.ageBand.onsInfection.ages  )
+export( data.ageBand.comix.ages  )
+export( data.ageBand.single.ages  )
+export( data.ageBand.ages  )
 
 # functions exposed by package
+export( data.adjuster.ageBand )
+export( data.englandCasesByAge )
 
 # required packages
 import( rstan )
