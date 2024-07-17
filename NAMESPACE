@@ -14,7 +14,9 @@ export( data.ageBand.ages  )
 
 # functions exposed by package
 export( data.adjuster.ageBand )
-export( data.englandCasesByAge )
+export( data.ukdashboard.casesByAge.england )
+export( data.ons.population.england )
+export( data.comix.contactmatrix )
 
 # required packages
 import( rstan )
