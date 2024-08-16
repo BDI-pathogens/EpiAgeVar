@@ -115,51 +115,42 @@ lockBinding( "data.ageBand.ages", environment() )
   c( "unassigned", "70+",    0 )
 ) 
 
-.ageband.maps[[ data.ageBand.ukDashboard ]][[ data.ageBand.single ]] <- unlist( 
-  lapply( data.ageBand.ukDashboard.ages, function( age ) { list( 
-    c( age, as.character( as.integer( substr( age, 1,2 ) ) + 0 ), 0.2 ),
-    c( age, as.character( as.integer( substr( age, 1,2 ) ) + 1 ), 0.2 ),
-    c( age, as.character( as.integer( substr( age, 1,2 ) ) + 2 ), 0.2 ),
-    c( age, as.character( as.integer( substr( age, 1,2 ) ) + 3 ), 0.2 ),
-    c( age, as.character( as.integer( substr( age, 1,2 ) ) + 4 ), 0.2 )
-  )
-  }), recursive = FALSE )
+.ageband.map.single = function( ageband.ages, to = TRUE, bucketSep = "-", maxBucket = "70+", maxBucketMinAge = 70 ) {
+  map = unlist( 
+    lapply( ageband.ages, function( age ) { 
+      if( age != maxBucket) {
+        minAge = as.integer( strsplit( age, bucketSep )[[1]][1] )
+        maxAge = as.integer( strsplit( age, bucketSep )[[1]][2] )
+      } else {
+        minAge = maxBucketMinAge
+        maxAge = 94
+      }
+      lapply( minAge:maxAge, function( age2) c( age, as.character(age2), 1 / ( maxAge - minAge + 1 )))
+    }), recursive = FALSE )
+  
+  if( to == FALSE )
+    map <- lapply( map, function( x ) c( x[2], x[1], "1" ) )
+  
+  return( map ) 
+}
 
-.ageband.maps[[ data.ageBand.comix ]][[ data.ageBand.single ]] <- unlist( 
-  lapply( data.ageBand.comix.ages, function( age ) { 
-    if( age != "70+") {
-      minAge = as.integer( strsplit( age, "-")[[1]][1] )
-      maxAge = as.integer( strsplit( age, "-")[[1]][2] )
-    } else {
-      minAge = 70
-      maxAge = 94
-    }
-    lapply( minAge:maxAge, function( age2) c( age, as.character(age2), 1 / ( maxAge - minAge + 1 )))
-  }), recursive = FALSE )
+.ageband.maps[[ data.ageBand.comix ]][[ data.ageBand.single ]] <- 
+  .ageband.map.single( data.ageBand.comix.ages, to = TRUE, bucketSep = "-", maxBucket = "70+", maxBucketMinAge = 70 )
 
-.ageband.maps[[ data.ageBand.onsInfection ]][[ data.ageBand.single ]] <- unlist( 
-  lapply( data.ageBand.onsInfection.ages, function( age ) { 
-    if( age != "70+") {
-      minAge = as.integer( strsplit( age, "-")[[1]][1] )
-      maxAge = as.integer( strsplit( age, "-")[[1]][2] )
-    } else {
-      minAge = 70
-      maxAge = 94
-    }
-    lapply( minAge:maxAge, function( age2) c( age, as.character(age2), 1 / ( maxAge - minAge + 1 )))
-  }), recursive = FALSE )
+.ageband.maps[[ data.ageBand.single ]][[ data.ageBand.comix ]] <- 
+  .ageband.map.single( data.ageBand.comix.ages, to = FALSE, bucketSep = "-", maxBucket = "70+", maxBucketMinAge = 70 )
 
-.ageband.maps[[ data.ageBand.decades ]][[ data.ageBand.single ]] <- unlist( 
-  lapply( data.ageBand.decades.ages, function( age ) { 
-    if( age != "80") {
-      minAge = as.integer( strsplit( age, "_")[[1]][1] )
-      maxAge = as.integer( strsplit( age, "_")[[1]][2] )
-    } else {
-      minAge = 80
-      maxAge = 94
-    }
-    lapply( minAge:maxAge, function( age2) c( age, as.character(age2), 1 / ( maxAge - minAge + 1 )))
-  }), recursive = FALSE )
+.ageband.maps[[ data.ageBand.onsInfection ]][[ data.ageBand.single ]] <- 
+  .ageband.map.single( data.ageBand.onsInfection.ages, to = TRUE, bucketSep = "-", maxBucket = "70+", maxBucketMinAge = 70 )
+
+.ageband.maps[[ data.ageBand.single ]][[ data.ageBand.onsInfection ]] <- 
+  .ageband.map.single( data.ageBand.onsInfection.ages, to = FALSE, bucketSep = "-", maxBucket = "70+", maxBucketMinAge = 70 )
+
+.ageband.maps[[ data.ageBand.decades ]][[ data.ageBand.single ]] <- 
+  .ageband.map.single( data.ageBand.decades.ages, to = TRUE, bucketSep = "_", maxBucket = "80", maxBucketMinAge = 80 )
+
+.ageband.maps[[ data.ageBand.single ]][[ data.ageBand.decades ]] <- 
+  .ageband.map.single( data.ageBand.decades.ages, to = FALSE, bucketSep = "_", maxBucket = "80", maxBucketMinAge = 80 )
 
 ###################################################################################/
 # data.adjuster.ageBand
