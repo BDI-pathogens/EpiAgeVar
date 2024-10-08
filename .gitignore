@@ -2,7 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
+.DS_Store
 
 scratch/*
 *.so
 *.o
+
+inst/.DS_Store
+src/stan_files/*.hpp
+src/init.cpp
