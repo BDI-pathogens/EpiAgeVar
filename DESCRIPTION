@@ -7,6 +7,7 @@ Maintainer: <robert.hinch@gmail.com>
 Depends: R (>= 3.3.0), Rcpp (>= 0.12.14)
 Imports: rstan (>= 2.17.3), rstantools (>= 1.4.0), R6 (>= 2.4.1), StanHeaders  (>= 2.17.2), 
   data.table (>= 1.13.0), plotly
+LinkingTo: StanHeaders (>= 2.17.2), rstan (>= 2.17.3), BH (>= 1.65.0.1), Rcpp (>= 0.12.14), RcppEigen (>= 0.3.3.3.1), RcppParallel
 Description: Estimating R(t) by age group in the presence of multiple variants
 License: Apache License (== 2.0)
 LazyData: TRUE

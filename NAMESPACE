@@ -11,18 +11,37 @@ export( data.ageBand.onsInfection.ages  )
 export( data.ageBand.comix.ages  )
 export( data.ageBand.single.ages  )
 export( data.ageBand.ages  )
+export( data.onsInfection.positivity ) 
+export( data.onsInfection.sampleSize )  
+export( data.onsInfection.positiveTests ) 
+export( data.onsInfection.all )
+
 
 # functions exposed by package
 export( data.adjuster.ageBand )
 export( data.ukdashboard.casesByAge.england )
 export( data.ons.population.england )
+export( data.ons.infections )
 export( data.comix.contactmatrix )
+export( data.cog.lineage )
+export( model.survey )
 
 # required packages
 import( rstan )
 import( Rcpp )
+import( RcppEigen )
+import( RcppParallel )
+import( methods )
 import( rstantools )
 import( StanHeaders )
 import( data.table )
 import( plotly)
 import( R6 )
+import( readxl )
+import( stringr )
+import( stringi )
+importFrom(RcppParallel,RcppParallelLibs)
+
+
+# dynamic link for Rcpp
+useDynLib( EpiAgeVar, .registration = TRUE )
