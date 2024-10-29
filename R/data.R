@@ -1,168 +1,91 @@
+.start_date <- as.Date( "2021-01-30")
+.end_date   <- as.Date( "2021-12-04") 
+
 ###################################################################################/
-# data.ukdashboard.casesByAge.england
+# data.raw_data_avalaible
+#
+# Public package cannot include the underlying raw data sources. It contains the
+# processed data fed in to the model and the code to do the conversions, but
+# this can only be run if the underlying raw data is downloaded from source
+#
 ###################################################################################/
-data.ukdashboard.casesByAge.england <- function( 
-  ageBands = data.ageBand.ukDashboard 
-)
-{
-  file <- system.file( "data", "uk_dashboard", "englandCasesByAge.csv", package = "EpiAgeVar")
-  dt   <- fread( file )
-  
-  if( ageBands != data.ageBand.ukDashboard ) {
-    if( !( ageBands %in% data.ageBand.all ) )
-        stop( sprintf( "ageBands type not supported, supported: %s", paste( data.ageBand.all, collapse = ", ") ) )
-    
-    adjuster <- data.adjuster.ageBand( data.ageBand.ukDashboard, ageBands, "cases", "date" ) 
-    dt       <- adjuster$process( dt )
-  }
-  return( copy( dt ) )
+data.raw_data_avalaible <- function() {
+  if( system.file( "data_raw", "ons_regions", "ONS-population_2021-08-05.csv", package = "EpiAgeVar") == "" )
+    stop( "Raw data not availble in public package" )
+  return()
 }
 
 ###################################################################################/
-# data.ons.population.england
-#
-# ons population
+# data.population
 ###################################################################################/
-data.ons.population.england <- function( 
-  ageBands = data.ageBand.decades
-)
-{
-  filePop <- system.file( "data", "ons_regions", "ONS-population_2021-08-05.csv", package = "EpiAgeVar")  
-  pop     <- fread( filePop )
-  
-  # ons england code
-  englandCode <- "E92000001"
-  pop <- pop[ areaCode == englandCode & gender == "ALL" & category == "AGE_ONLY"] 
-  pop <- pop[ , .( age, population, category )]
-  
-  # now sort out age buckets are required
-  pop <- pop[ age %in% data.ageBand.ukDashboard.ages ]
-  
-  if( ageBands != data.ageBand.ukDashboard ) {
-    if( !( ageBands %in% data.ageBand.all ) )
-      stop( sprintf( "ageBands type not supported, supported: %s", paste( data.ageBand.all, collapse = ", ") ) )
-    
-    adjuster <- data.adjuster.ageBand( data.ageBand.ukDashboard, ageBands, "population", c() ) 
-    pop       <- adjuster$process(pop )
-  }
-  return( pop )
-}
-
-data.comix.1_lockdown_1           = "1. Lockdown 1"           
-data.comix.2_lockdown_1_easing    = "2. Lockdown 1 easing"    
-data.comix.3_relaxed_restrictions = "3. Relaxed restrictions" 
-data.comix.4_school_reopening     = "4. School reopening"    
-data.comix.5_lockdown_2           = "5. Lockdown 2"           
-data.comix.6_lockdown_2_easing    = "6. Lockdown 2 easing"    
-data.comix.7_christmas            = "7. Christmas"            
-data.comix.8_lockdown_3           = "8. Lockdown 3"          
-data.comix.9_lockdown_3_schools   = "9. Lockdown 3 + schools"
-data.comix.periods = c( 
-  data.comix.1_lockdown_1, data.comix.2_lockdown_1_easing, data.comix.3_relaxed_restrictions,
-  data.comix.4_school_reopening, data.comix.5_lockdown_2, data.comix.6_lockdown_2_easing,
-  data.comix.7_christmas, data.comix.8_lockdown_3, data.comix.9_lockdown_3_schools
-)
-
-lockBinding( "data.comix.1_lockdown_1", environment() )                     
-lockBinding( "data.comix.2_lockdown_1_easing", environment() )     
-lockBinding( "data.comix.3_relaxed_restrictions", environment() )     
-lockBinding( "data.comix.4_school_reopening", environment() )     
-lockBinding( "data.comix.5_lockdown_2", environment() )     
-lockBinding( "data.comix.6_lockdown_2_easing", environment() )        
-lockBinding( "data.comix.7_christmas", environment() )                
-lockBinding( "data.comix.8_lockdown_3", environment() )               
-lockBinding( "data.comix.9_lockdown_3_schools", environment() )        
-lockBinding( "data.comix.periods", environment() )     
-
-###################################################################################/
-# data.comix.contactmatrix
-#
-# Returns a Comix contact matrix:
-#   column = participant age group
-#   row    = contact age group
-#
-# Note the matrix is asymmetric due to different population size in each group
-###################################################################################/
-data.comix.contactmatrix <- function( 
-  period   = data.comix.4_school_reopening, 
-  ageBands = data.ageBand.comix
-)
-{
-  file <- system.file( "data", "comix", "contact_matrices_9_periods.csv", package = "EpiAgeVar" )  
-  
-  dt_contacts <- fread( file )
-  setnames( dt_contacts, 1:5,c("idx", "source", "contact", "contacts", "Period"))
-  dt_contacts <- dt_contacts[ Period == period ]
-  
-  if( ageBands != data.ageBand.comix ) {
-    # get population for splitting contacts 
-    pop <- data.ons.population.england( ageBands = data.ageBand.single )
-    
-    # first split in to a single year contract matrix
-    adjusterParticipant <- data.adjuster.ageBand( 
-      data.ageBand.comix, 
-      data.ageBand.single, 
-      sumColumns   = "contacts", 
-      byColumns    = "contact", 
-      bucketColumn = "source" 
-    )
-    oldMap <- copy( adjusterParticipant$map )
-    
-    adjusterContact <- data.adjuster.ageBand( 
-      ifelse( ageBands != data.ageBand.single, ageBands, data.ageBand.comix ),
-      data.ageBand.single, 
-      sumColumns   = "contacts", 
-      byColumns    = "source",
-      bucketColumn = "contact"
-    )  
-    newMap <- copy( adjusterContact$map )
-    
-    oldAgeUnityMap     <- oldMap[ , .( old, new, frac = 1)]
-    oldAgePopWeightMap <- pop[ , .(new = age, population ) ][ oldMap, on = "new" ]
-    totPop             <- oldAgePopWeightMap[ , .(tot = sum(population)), by = "old"]
-    oldAgePopWeightMap <- totPop[ oldAgePopWeightMap, on = "old"][ ,.( old, new, frac = population / tot)]
-    
-    # each participant in band has same contacts regardless of age 
-    adjusterParticipant$map <- oldAgeUnityMap
-    dt_contacts             <-adjusterParticipant$process(dt_contacts)
-    
-    # contacts with in a contact band are population weighted by age in band 
-    # (i.e. equally likely to have contact with anyone in band)
-    adjusterContact$map <- oldAgePopWeightMap
-    dt_contacts         <- adjusterContact$process(dt_contacts )
-    
-    # then aggregate single years into new age bands
-    newAgeUnityMap     <- newMap[ , .( old = new, new = old, frac = 1)]
-    newAgePopWeightMap <- pop[ , .(new = age, population ) ][ newMap, on = "new" ]
-    totPop             <- newAgePopWeightMap[ , .(tot = sum(population)), by = "old"]
-    newAgePopWeightMap <- totPop[ newAgePopWeightMap, on = "old"][ ,.( old = new, new = old, frac = population / tot)]
-    
-    # special handling for ONS which does not have 0-1y ages
-    if( ageBands == data.ageBand.onsInfection ){
-      dt_contacts <- dt_contacts[ !( source %in% c( "0", "1") )]
-      dt_contacts <- dt_contacts[ ,.( source, contact = ifelse( contact %in% c( "0", "1"), "2",contact), contacts)]
-      dt_contacts <- dt_contacts[ , .(contacts = sum(contacts)), by = c("source", "contact")]
-    }
-    
-    if( ageBands != data.ageBand.single ) {
-      # sum contacts across all contact in new age band
-      adjusterContact$map <- newAgeUnityMap
-      dt_contacts         <- adjusterContact$process(dt_contacts )
-      
-      # take population weighted across all partiapnts in new age band 
-      adjusterParticipant$map <- newAgePopWeightMap 
-      dt_contacts             <- adjusterParticipant$process(dt_contacts )
-    }
+data.population <- function( from_raw = FALSE ) {
+  if( from_raw ) {
+    data.raw_data_avalaible()
+    population <- data.ons.population.england( data.ageBand.comix )
+  } else {
+    file <- system.file( "data", "population.csv", package = "EpiAgeVar" )
+    population <- fread( file )
   }
   
-  ages           <- data.ageBand.ages[[ ageBands]]
-  contact_matrix <- dcast.data.table( dt_contacts, source ~ contact, value.var = "contacts", fun.aggregate = mean )
-  setcolorder( contact_matrix, c( "source", ages ) )
-  contact_matrix$source <- factor( contact_matrix$source, ages )
-  contact_matrix <- contact_matrix[ order( source  )]
-  contact_matrix <- t(as.matrix( contact_matrix[,-1]) )
-  contact_matrix <- `colnames<-`(contact_matrix, ages)
-  
-  return( contact_matrix )
+  population$age <- factor( population$age, levels = data.ageBand.comix.ages )
+  population     <- population[ order( age ) ]
+  return( copy( population ) )
 }
 
+###################################################################################/
+# data.contact_matrix
+###################################################################################/
+data.contact_matrix <- function( from_raw = FALSE ) {
+  if( from_raw ) {
+    data.raw_data_avalaible()
+    cm <- data.comix.contactmatrix()
+  } else {
+    file <- system.file( "data", "contact_matrix.csv", package = "EpiAgeVar" )
+    cm   <- fread( file )
+    cm   <- `rownames<-`(  as.matrix( cm ), names( cm ) )
+  }
+  return( cm )
+}
+
+###################################################################################/
+# data.infection_survey
+###################################################################################/
+data.infection_survey <- function( from_raw = FALSE ) {
+  if( from_raw ) {
+    data.raw_data_avalaible()
+    positive_tests <- data.ons.infections( field = data.onsInfection.positiveTests, ageBands = data.ageBand.comix)
+    positive_tests <- positive_tests[ date >= .start_date & date <= .end_date ]
+   
+    sample_size <- data.ons.infections( field = data.onsInfection.sampleSize, ageBands = data.ageBand.comix)
+    sample_size <- sample_size[ date >= .start_date & date <= .end_date ]  
+  } else {
+    file <- system.file( "data", "infection_survey_positive.csv", package = "EpiAgeVar" )
+    positive_tests <- fread( file )
+    
+    file <- system.file( "data", "infection_survey_size.csv", package = "EpiAgeVar" )
+    sample_size <- fread( file )
+  }
+  setcolorder( sample_size, c( "date", data.ageBand.comix.ages ) )
+  setcolorder( positive_tests, c( "date", data.ageBand.comix.ages ) )
+  return( list( sample_size = copy( sample_size ), positive_tests = copy( positive_tests ) ) ) 
+}
+
+###################################################################################/
+# data.variants
+###################################################################################/
+data.variants <- function( from_raw = FALSE ) {
+  if( from_raw ) {
+    cog <- data.cog.lineage()
+    cog[ , lineage := ifelse( 
+      lineage == "B.1.1.7",                                              "Alpha", 
+      ifelse( lineage == "B.1.617.2" | substr( lineage, 1, 3 ) == "AY.", "Delta",
+                                                                         "Other" ) ) ]
+    cog[ ,  date := as.Date(date) + ( as.integer( as.Date( date ) - .start_date ) %% 14 ) ]
+    cog <- dcast.data.table( cog, date ~ lineage, value.var = "count", fun.aggregate = function(x) sum(x) )
+    cog <- cog[ date >= .start_date & date <= .end_date, .( date, Alpha, Delta ) ] 
+  } else {
+    file <- system.file( "data", "variants.csv", package = "EpiAgeVar" )
+    cog <- fread( file )
+  }
+  return( copy( cog ) )
+}
