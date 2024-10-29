@@ -11,3 +11,6 @@ scratch/*
 inst/.DS_Store
 src/stan_files/*.hpp
 src/init.cpp
+
+inst/data_raw/*
+R/data_raw/*
