@@ -152,6 +152,12 @@ lockBinding( "data.ageBand.ages", environment() )
 .ageband.maps[[ data.ageBand.single ]][[ data.ageBand.decades ]] <- 
   .ageband.map.single( data.ageBand.decades.ages, to = FALSE, bucketSep = "_", maxBucket = "80", maxBucketMinAge = 80 )
 
+.ageband.maps[[ data.ageBand.ukDashboard ]][[ data.ageBand.single ]] <- 
+  .ageband.map.single( data.ageBand.ukDashboard.ages, to = TRUE, bucketSep = "_", maxBucket = "90+", maxBucketMinAge = 90 )
+
+.ageband.maps[[ data.ageBand.single ]][[ data.ageBand.ukDashboard ]] <- 
+  .ageband.map.single( data.ageBand.ukDashboard.ages, to = FALSE, bucketSep = "_", maxBucket = "90+", maxBucketMinAge = 90 )
+
 ###################################################################################/
 # data.adjuster.ageBand
 #
@@ -166,12 +172,12 @@ data.adjuster.ageBand <- function(
 )
 {
   if( !( from %in% data.ageBand.all ) || !( to %in% data.ageBand.all )  )
-    throw( "age band is not recognised (see data.ageBand.all for known age bands)")
+    stop( "age band is not recognised (see data.ageBand.all for known age bands)")
   
   if( is.null( .ageband.maps[[ from ]] ) )
-    throw( "age band map not yet implemented for this combination - add to .ageband.maps in adjuster.R")
+    stop( "age band map not yet implemented for this combination - add to .ageband.maps in adjuster.R")
   if( is.null( .ageband.maps[[ from ]][[ to ]] ) )
-    throw( "age band map not yet implemented for this combination - add to .ageband.maps in adjuster.R")
+    stop( "age band map not yet implemented for this combination - add to .ageband.maps in adjuster.R")
   
   map <- .ageband.maps[[ from ]][[ to ]] 
   map <- as.data.table( transpose( map ) )
