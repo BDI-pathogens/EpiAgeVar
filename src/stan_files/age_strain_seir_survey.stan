@@ -30,7 +30,6 @@ data {
   real prior_dR_sd_max;         // minimum of prior on sd of dR for age (log-normal process)    
   real prior_R_age_exp_min;     // minimum of prior o R_age_exp
   real prior_R_age_exp_max;     // maximum of prior o R_age_exp
-  real prior_phi_od_max;        // maximum of obersvation over dispersion parameter
   real prior_strain_multipliers_min[n_strains-1]; // minimum prior on strain multipliers
   real prior_strain_multipliers_max[n_strains-1]; // minimum prior on strain multipliers
   real prior_dR_max;            // maximum absolute value dR and dR age can be
@@ -91,7 +90,6 @@ parameters {
   real<lower=prior_dR_age_sd_min,upper=prior_dR_age_sd_max> dR_sd_age; 
   row_vector<lower=-prior_dR_max,upper=prior_dR_max>[ n_dates_age ] dR;
   matrix<lower=-prior_dR_max,upper=prior_dR_max>[ n_ages,n_dates_age ] dR_age;
-  real<lower=0,upper=prior_phi_od_max> phi_od;
   real<lower=0,upper=1> strain_multipliers_raw[n_strain_multipliers];
   real<lower=0,upper=1> daily_seed_raw[n_strains];
   real<lower=prior_R_age_exp_min,upper=prior_R_age_exp_max> R_age_exp;
