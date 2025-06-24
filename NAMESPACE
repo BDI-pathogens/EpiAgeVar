@@ -17,10 +17,10 @@ import( StanHeaders )
 import( data.table )
 import( plotly)
 import( R6 )
-import( readxl )
-import( stringr )
-import( stringi )
 importFrom(RcppParallel,RcppParallelLibs)
+importFrom( readxl,read_xlsx )
+importFrom( stringr,str_replace )
+importFrom( stringi,stri_split_fixed )
 
 
 # dynamic link for Rcpp
